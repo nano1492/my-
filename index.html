@@ -2,8 +2,19 @@
 <html lang="it">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Media Voti</title>
+<meta name="description" content="Inserisci i voti, guarda la media e scopri che voto ti serve alla prossima verifica.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Media Voti">
 <style>
 :root{
   --bg:#f6f7f9; --card:#ffffff; --text:#1b1f24; --muted:#667085; --line:#e4e7ec;
@@ -23,8 +34,10 @@
   --shadow:none;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 48px}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+.wrap{max-width:1100px;margin:0 auto;
+  padding:max(20px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(48px,calc(env(safe-area-inset-bottom) + 24px)) max(16px,env(safe-area-inset-left))}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
 h1{font-size:22px;margin:0}
 h2{font-size:16px;margin:0 0 12px}
@@ -36,7 +49,7 @@ h2{font-size:16px;margin:0 0 12px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
 .stat .v{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
 .stat .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-@media(max-width:520px){.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:span 2}}
+
 input,select,button{font:inherit;color:inherit}
 input,select{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px;width:100%;min-width:0}
 input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
@@ -73,6 +86,43 @@ svg{display:block;width:100%;height:auto}
 .result .big{font-size:34px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
 .empty{text-align:center;padding:28px 10px;color:var(--muted)}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+button:active{transform:scale(.97)}
+button[hidden]{display:none}
+[data-note]{display:none}
+.offline{display:none;font-size:12px;color:var(--mid);margin-top:2px}
+body.is-offline .offline{display:block}
+#gradeForm{grid-template-columns:1fr 1fr 1fr auto;align-items:end}
+
+/* ---------- Telefono ---------- */
+@media (max-width:859px){
+  .grid>.stack{display:contents}
+  #cardSubj{order:1} #cardGrades{order:2} #cardChart{order:3} #cardCalc{order:4}
+}
+@media (max-width:600px){
+  input,select{font-size:16px;padding:10px 12px} /* evita lo zoom automatico su iPhone */
+  button{padding:10px 14px}
+  button.icon{min-width:40px;min-height:40px}
+  header{flex-wrap:wrap}
+  header .row button{padding:7px 11px;font-size:13px}
+  h1{font-size:20px}
+  .card{padding:14px;border-radius:12px}
+  .stats{gap:8px;margin-bottom:12px}
+  .stat{padding:10px 12px;border-radius:12px}
+  .stat .v{font-size:24px}
+  .stat .l{font-size:10px;letter-spacing:.02em}
+  .stat{padding:10px}
+  .subj{padding:8px 6px;gap:8px}
+  #gradeForm{grid-template-columns:1fr 1fr}
+  #gradeForm .gw{grid-column:1}
+  #gradeForm button[type=submit]{grid-column:2;height:44px}
+  th,td{padding:9px 4px}
+  .col-note{display:none}
+  [data-note]{display:block}
+  .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -14px 10px;padding:0 14px}
+  .tabs::-webkit-scrollbar{display:none}
+  .result .big{font-size:30px}
+  .legend{font-size:12px;gap:8px}
+}
 .tabs button{padding:5px 11px;font-size:13px}
 .tabs button:not(.on){background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:500}
 .stack{display:grid;gap:16px}
@@ -84,9 +134,11 @@ svg{display:block;width:100%;height:auto}
   <header>
     <div>
       <h1>📚 Media Voti</h1>
-      <div class="muted" style="font-size:13px">I dati restano salvati in questo browser.</div>
+      <div class="muted" style="font-size:13px">I dati restano salvati su questo dispositivo.</div>
+      <div class="offline">● Sei offline: l'app funziona lo stesso</div>
     </div>
     <div class="row">
+      <button id="installBtn" hidden title="Installa l'app">⬇ Installa</button>
       <button class="ghost" id="exportBtn" title="Scarica backup">Esporta</button>
       <button class="ghost" id="importBtn" title="Carica backup">Importa</button>
       <input type="file" id="importFile" accept="application/json" hidden>
@@ -102,7 +154,7 @@ svg{display:block;width:100%;height:auto}
   <div class="grid">
     <!-- Colonna sinistra: materie -->
     <div class="stack">
-      <div class="card">
+      <div class="card" id="cardSubj">
         <h2>Materie</h2>
         <form id="subjForm" class="row" style="margin-bottom:10px">
           <input id="subjName" placeholder="Es. Matematica" maxlength="40" required>
@@ -111,11 +163,11 @@ svg{display:block;width:100%;height:auto}
         <div id="subjList"></div>
       </div>
 
-      <div class="card">
+      <div class="card" id="cardCalc">
         <h2>🎯 Che voto mi serve?</h2>
         <div class="form">
           <div class="full"><label>Materia</label><select id="cSubj"></select></div>
-          <div><label>Media desiderata</label><input id="cTarget" type="number" min="1" max="10" step="0.1" value="7"></div>
+          <div><label>Media desiderata</label><input id="cTarget" type="number" inputmode="decimal" min="1" max="10" step="0.1" value="7"></div>
           <div><label>Peso verifica</label>
             <select id="cWeight"><option value="1">100%</option><option value="0.5">50%</option><option value="0.75">75%</option><option value="1.5">150%</option><option value="2">200%</option></select>
           </div>
@@ -129,22 +181,22 @@ svg{display:block;width:100%;height:auto}
 
     <!-- Colonna destra -->
     <div class="stack">
-      <div class="card">
+      <div class="card" id="cardGrades">
         <h2 id="gradesTitle">Voti</h2>
-        <form id="gradeForm" class="form" style="grid-template-columns:1fr 1fr 1fr auto;align-items:end">
-          <div><label>Voto</label><input id="gVal" placeholder="7½, 6+, 8-" required></div>
+        <form id="gradeForm" class="form">
+          <div><label>Voto</label><input id="gVal" placeholder="7½, 6+, 8-" inputmode="decimal" autocomplete="off" required></div>
           <div><label>Data</label><input id="gDate" type="date" required></div>
-          <div><label>Peso</label>
+          <div class="gw"><label>Peso</label>
             <select id="gWeight"><option value="1">100%</option><option value="0.5">50%</option><option value="0.75">75%</option><option value="1.5">150%</option><option value="2">200%</option></select>
           </div>
-          <button type="submit">+</button>
+          <button type="submit" aria-label="Aggiungi voto">+ Aggiungi</button>
           <div class="full"><input id="gNote" placeholder="Nota (facoltativa): es. Scritto, Interrogazione…" maxlength="60"></div>
         </form>
         <div class="hint">Formati accettati: 7 · 7.5 · 7,5 · 7½ · 7+ (7.25) · 7- (6.75) · 6/7 (6.5)</div>
         <div id="gradeTable" style="margin-top:12px"></div>
       </div>
 
-      <div class="card">
+      <div class="card" id="cardChart">
         <h2>📈 Andamento nel tempo</h2>
         <div class="tabs" id="chartTabs"></div>
         <div class="chart-wrap" id="chartWrap">
@@ -241,12 +293,12 @@ function renderGrades(){
   $('gradesTitle').innerHTML = `Voti di ${esc(s.name)} <span class="badge bg-${cls(a)}" style="margin-left:6px">${fmt(a)}</span>`;
   if(!s.grades.length){ $('gradeTable').innerHTML='<div class="empty">Nessun voto ancora.</div>'; return; }
   const sorted = [...s.grades].sort((x,y)=> y.date.localeCompare(x.date));
-  $('gradeTable').innerHTML = `<table><thead><tr><th>Data</th><th>Voto</th><th>Peso</th><th>Nota</th><th></th></tr></thead><tbody>
+  $('gradeTable').innerHTML = `<table><thead><tr><th>Data</th><th>Voto</th><th>Peso</th><th class="col-note">Nota</th><th></th></tr></thead><tbody>
     ${sorted.map(g=>`<tr>
       <td>${fmtDate(g.date)}</td>
-      <td><b class="${cls(g.value)}">${esc(g.label||fmt(g.value))}</b></td>
+      <td><b class="${cls(g.value)}">${esc(g.label||fmt(g.value))}</b>${g.note?`<div class="muted" style="font-size:12px" data-note>${esc(g.note)}</div>`:''}</td>
       <td class="muted">${Math.round(g.weight*100)}%</td>
-      <td class="muted">${esc(g.note||'')}</td>
+      <td class="muted col-note">${esc(g.note||'')}</td>
       <td><button class="icon" data-delg="${g.id}" title="Elimina voto">✕</button></td>
     </tr>`).join('')}</tbody></table>`;
 }
@@ -309,7 +361,9 @@ function renderChart(){
     state.subjects.map(s=>`<button class="${chartMode===s.id?'on':''}" data-mode="${s.id}">${esc(s.name)}</button>`).join('');
 
   const svg = $('chart'); const legend = $('legend');
-  const Wd=640, H=300, P={l:34,r:14,t:14,b:30};
+  const Wd = Math.max(280, Math.round($('chartWrap').clientWidth || 640));
+  const H = Wd < 520 ? 230 : 300, P={l:30,r:12,t:12,b:28};
+  svg.setAttribute('viewBox', `0 0 ${Wd} ${H}`);
   const cs = getComputedStyle(document.documentElement);
   const cLine = cs.getPropertyValue('--line').trim(), cMuted = cs.getPropertyValue('--muted').trim(),
         cText = cs.getPropertyValue('--text').trim(), cBad = cs.getPropertyValue('--bad').trim(), cCard = cs.getPropertyValue('--card').trim();
@@ -346,7 +400,7 @@ function renderChart(){
     g += `<text x="${P.l-8}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="${cMuted}">${v}</text>`;
   }
   // x ticks
-  const nT = Math.min(6, new Set(times).size || 2);
+  const nT = Math.min(Wd < 520 ? 4 : 6, new Set(times).size || 2);
   for(let i=0;i<nT;i++){
     const t = t0 + (t1-t0)*i/(Math.max(1,nT-1));
     const d = new Date(t);
@@ -370,16 +424,23 @@ function renderChart(){
   legend.innerHTML = lines.map(l=>`<span><span class="dot" style="background:${l.dotsOnly?'transparent':l.color};border:2px solid ${l.color}"></span>${esc(l.name)}</span>`).join('') +
     `<span class="muted"><span style="display:inline-block;width:16px;border-top:2px dashed ${cBad}"></span>soglia 6</span>`;
 }
-$('chart').addEventListener('mousemove', e => {
-  const svg = e.currentTarget, hits = svg._hits||[], tip = $('tip');
-  const r = svg.getBoundingClientRect(), sx = 640/r.width;
+function showTip(e){
+  const svg = $('chart'), hits = svg._hits||[], tip = $('tip');
+  const r = svg.getBoundingClientRect(), sx = svg.viewBox.baseVal.width/r.width;
   const mx = (e.clientX-r.left)*sx, my = (e.clientY-r.top)*sx;
   let best=null, bd=Infinity;
   for(const h of hits){ const d=Math.hypot(h.x-mx,h.y-my); if(d<bd){bd=d;best=h;} }
-  if(best && bd<24){ tip.style.display='block'; tip.textContent=best.tip; tip.style.left=(best.x/sx)+'px'; tip.style.top=(best.y/sx)+'px'; }
-  else tip.style.display='none';
-});
-$('chart').addEventListener('mouseleave', ()=> $('tip').style.display='none');
+  const near = e.pointerType==='touch' ? 40 : 24;
+  if(best && bd<near){
+    tip.style.display='block'; tip.textContent=best.tip;
+    const half = tip.offsetWidth/2, left = Math.min(Math.max(best.x/sx, half), r.width-half);
+    tip.style.left=left+'px'; tip.style.top=(best.y/sx)+'px';
+  } else tip.style.display='none';
+}
+$('chart').addEventListener('pointermove', showTip);
+$('chart').addEventListener('pointerdown', showTip);
+$('chart').addEventListener('pointerleave', e => { if(e.pointerType!=='touch') $('tip').style.display='none'; });
+let rT; window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(renderChart, 120); });
 
 /* ---------- Events ---------- */
 $('subjForm').addEventListener('submit', e => {
@@ -402,7 +463,10 @@ $('subjList').addEventListener('click', e => {
     return;
   }
   const row = e.target.closest('.subj');
-  if(row){ selected=row.dataset.id; $('cSubj').value=selected; render(); }
+  if(row){
+    selected=row.dataset.id; $('cSubj').value=selected; render();
+    if(window.innerWidth < 860) $('cardGrades').scrollIntoView({behavior:'smooth', block:'start'});
+  }
 });
 $('gradeForm').addEventListener('submit', e => {
   e.preventDefault();
@@ -441,6 +505,23 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', r
 
 $('gDate').value = new Date().toISOString().slice(0,10);
 render();
+
+/* ---------- PWA ---------- */
+// Chiede al browser di non cancellare mai i dati salvati (se lo spazio scarseggia).
+if(navigator.storage && navigator.storage.persist){ navigator.storage.persist().catch(()=>{}); }
+// Se l'app viene aperta in un'altra scheda, tieni i dati allineati.
+window.addEventListener('storage', e => { if(e.key===KEY){ state = load(); if(!getSubj(selected)) selected = state.subjects[0]?.id||null; render(); } });
+if('serviceWorker' in navigator && location.protocol !== 'file:'){
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('installBtn').hidden = false; });
+$('installBtn').addEventListener('click', async () => {
+  if(!installEvt) return; installEvt.prompt(); await installEvt.userChoice.catch(()=>{}); installEvt = null; $('installBtn').hidden = true;
+});
+window.addEventListener('appinstalled', () => { $('installBtn').hidden = true; });
+const netState = () => document.body.classList.toggle('is-offline', !navigator.onLine);
+window.addEventListener('online', netState); window.addEventListener('offline', netState); netState();
 })();
 </script>
 </body>
