@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Media Voti</title>
+<style>
+:root{
+  --bg:#f6f7f9; --card:#ffffff; --text:#1b1f24; --muted:#667085; --line:#e4e7ec;
+  --accent:#3b5bdb; --accent-soft:#e7ecff; --good:#1f9d55; --mid:#c27c0e; --bad:#d6334a;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1115; --card:#171a21; --text:#e8eaef; --muted:#9aa3b2; --line:#2a2f3a;
+    --accent:#7b93ff; --accent-soft:#1f2645; --good:#3ecf7a; --mid:#f0a93b; --bad:#ff6b80;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1115; --card:#171a21; --text:#e8eaef; --muted:#9aa3b2; --line:#2a2f3a;
+  --accent:#7b93ff; --accent-soft:#1f2645; --good:#3ecf7a; --mid:#f0a93b; --bad:#ff6b80;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+h1{font-size:22px;margin:0}
+h2{font-size:16px;margin:0 0 12px}
+.muted{color:var(--muted)}
+.grid{display:grid;gap:16px;grid-template-columns:1fr}
+@media(min-width:860px){.grid{grid-template-columns:340px 1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+.stat .v{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+@media(max-width:520px){.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:span 2}}
+input,select,button{font:inherit;color:inherit}
+input,select{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px;width:100%;min-width:0}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+button{border:0;border-radius:9px;padding:8px 14px;background:var(--accent);color:#fff;cursor:pointer;font-weight:600;white-space:nowrap}
+button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:500}
+button.icon{background:transparent;color:var(--muted);padding:4px 8px;font-weight:500}
+button.icon:hover{color:var(--bad)}
+.row{display:flex;gap:8px;align-items:center}
+.form{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+.form .full{grid-column:1/-1}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:3px}
+.subj{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;border:1px solid transparent}
+.subj:hover{background:var(--bg)}
+.subj.active{background:var(--accent-soft);border-color:var(--accent)}
+.subj .name{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.subj .n{font-size:12px;color:var(--muted)}
+.badge{font-weight:700;font-variant-numeric:tabular-nums;min-width:46px;text-align:center;padding:3px 8px;border-radius:8px;font-size:14px}
+.g{color:var(--good)} .m{color:var(--mid)} .b{color:var(--bad)}
+.bg-g{background:color-mix(in srgb,var(--good) 15%,transparent);color:var(--good)}
+.bg-m{background:color-mix(in srgb,var(--mid) 15%,transparent);color:var(--mid)}
+.bg-b{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
+.bg-n{background:var(--bg);color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+th{font-size:12px;color:var(--muted);font-weight:500}
+td:last-child,th:last-child{text-align:right;width:40px}
+.chart-wrap{position:relative;width:100%}
+svg{display:block;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:13px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.tip{position:absolute;pointer-events:none;background:var(--text);color:var(--bg);padding:6px 9px;border-radius:8px;font-size:12px;white-space:nowrap;transform:translate(-50%,-110%);display:none}
+.result{margin-top:12px;padding:14px;border-radius:12px;background:var(--bg);font-size:15px}
+.result .big{font-size:34px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.empty{text-align:center;padding:28px 10px;color:var(--muted)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tabs button{padding:5px 11px;font-size:13px}
+.tabs button:not(.on){background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:500}
+.stack{display:grid;gap:16px}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>📚 Media Voti</h1>
+      <div class="muted" style="font-size:13px">I dati restano salvati in questo browser.</div>
+    </div>
+    <div class="row">
+      <button class="ghost" id="exportBtn" title="Scarica backup">Esporta</button>
+      <button class="ghost" id="importBtn" title="Carica backup">Importa</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="l">Media generale</div><div class="v" id="sAvg">–</div></div>
+    <div class="stat"><div class="l">Voti inseriti</div><div class="v" id="sCount">0</div></div>
+    <div class="stat"><div class="l">Insufficienze</div><div class="v" id="sFail">0</div></div>
+  </div>
+
+  <div class="grid">
+    <!-- Colonna sinistra: materie -->
+    <div class="stack">
+      <div class="card">
+        <h2>Materie</h2>
+        <form id="subjForm" class="row" style="margin-bottom:10px">
+          <input id="subjName" placeholder="Es. Matematica" maxlength="40" required>
+          <button type="submit">Aggiungi</button>
+        </form>
+        <div id="subjList"></div>
+      </div>
+
+      <div class="card">
+        <h2>🎯 Che voto mi serve?</h2>
+        <div class="form">
+          <div class="full"><label>Materia</label><select id="cSubj"></select></div>
+          <div><label>Media desiderata</label><input id="cTarget" type="number" min="1" max="10" step="0.1" value="7"></div>
+          <div><label>Peso verifica</label>
+            <select id="cWeight"><option value="1">100%</option><option value="0.5">50%</option><option value="0.75">75%</option><option value="1.5">150%</option><option value="2">200%</option></select>
+          </div>
+          <div class="full"><label>Numero di prossime verifiche</label>
+            <select id="cCount"><option value="1">1 verifica</option><option value="2">2 verifiche</option><option value="3">3 verifiche</option></select>
+          </div>
+        </div>
+        <div class="result" id="cResult"></div>
+      </div>
+    </div>
+
+    <!-- Colonna destra -->
+    <div class="stack">
+      <div class="card">
+        <h2 id="gradesTitle">Voti</h2>
+        <form id="gradeForm" class="form" style="grid-template-columns:1fr 1fr 1fr auto;align-items:end">
+          <div><label>Voto</label><input id="gVal" placeholder="7½, 6+, 8-" required></div>
+          <div><label>Data</label><input id="gDate" type="date" required></div>
+          <div><label>Peso</label>
+            <select id="gWeight"><option value="1">100%</option><option value="0.5">50%</option><option value="0.75">75%</option><option value="1.5">150%</option><option value="2">200%</option></select>
+          </div>
+          <button type="submit">+</button>
+          <div class="full"><input id="gNote" placeholder="Nota (facoltativa): es. Scritto, Interrogazione…" maxlength="60"></div>
+        </form>
+        <div class="hint">Formati accettati: 7 · 7.5 · 7,5 · 7½ · 7+ (7.25) · 7- (6.75) · 6/7 (6.5)</div>
+        <div id="gradeTable" style="margin-top:12px"></div>
+      </div>
+
+      <div class="card">
+        <h2>📈 Andamento nel tempo</h2>
+        <div class="tabs" id="chartTabs"></div>
+        <div class="chart-wrap" id="chartWrap">
+          <svg id="chart" viewBox="0 0 640 300" role="img" aria-label="Grafico andamento voti"></svg>
+          <div class="tip" id="tip"></div>
+        </div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const KEY = 'mediaVoti.v1';
+const PALETTE = ['#3b5bdb','#e8590c','#2b8a3e','#ae3ec9','#0c8599','#c2255c','#5f3dc4','#a07400','#1971c2','#d6336c'];
+let state = load();
+let selected = state.subjects[0]?.id || null;
+let chartMode = 'all'; // 'all' | subject id
+
+function load(){
+  try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s && Array.isArray(s.subjects)) return s; }catch(e){}
+  return {subjects:[]};
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+const uid = () => Math.random().toString(36).slice(2,10);
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function parseGrade(raw){
+  let s = String(raw).trim().replace(',', '.').replace(/\s+/g,'');
+  if(!s) return null;
+  let m;
+  if((m = s.match(/^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)$/))) return (+m[1] + +m[2]) / 2;
+  if((m = s.match(/^(\d+)(½|1\/2|e1\/2|emezzo)$/i))) return +m[1] + 0.5;
+  if((m = s.match(/^(\d+)(\+\+?|--?)$/))){
+    const d = m[2]==='+'?0.25:m[2]==='++'?0.5:m[2]==='-'?-0.25:-0.5;
+    return +m[1] + d;
+  }
+  if(/^\d+(\.\d+)?$/.test(s)) return +s;
+  return null;
+}
+const fmt = v => v==null||isNaN(v) ? '–' : (Math.round(v*100)/100).toLocaleString('it-IT',{maximumFractionDigits:2});
+const cls = v => v==null ? 'n' : v>=7 ? 'g' : v>=6 ? 'm' : 'b';
+const fmtDate = d => new Date(d+'T00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'2-digit'});
+
+function avg(grades){
+  let sw=0, s=0;
+  for(const g of grades){ s += g.value*g.weight; sw += g.weight; }
+  return sw ? s/sw : null;
+}
+function overall(){
+  const a = state.subjects.map(s => avg(s.grades)).filter(v => v!=null);
+  return a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
+}
+function colorOf(s){ return PALETTE[state.subjects.indexOf(s) % PALETTE.length]; }
+function getSubj(id){ return state.subjects.find(s => s.id===id); }
+
+/* ---------- Render ---------- */
+function render(){
+  renderStats(); renderSubjects(); renderGrades(); renderCalcSelect(); renderCalc(); renderChart();
+}
+function renderStats(){
+  const o = overall();
+  const all = state.subjects.flatMap(s=>s.grades);
+  $('sAvg').textContent = fmt(o);
+  $('sAvg').className = 'v ' + (o==null?'':cls(o));
+  $('sCount').textContent = all.length;
+  const fails = state.subjects.filter(s => { const a=avg(s.grades); return a!=null && a<6; }).length;
+  $('sFail').textContent = fails;
+  $('sFail').className = 'v ' + (fails ? 'b' : '');
+}
+function renderSubjects(){
+  const el = $('subjList');
+  if(!state.subjects.length){ el.innerHTML = '<div class="empty">Aggiungi la tua prima materia ↑</div>'; return; }
+  el.innerHTML = state.subjects.map(s => {
+    const a = avg(s.grades);
+    return `<div class="subj ${s.id===selected?'active':''}" data-id="${s.id}">
+      <span class="dot" style="background:${colorOf(s)}"></span>
+      <span class="name">${esc(s.name)}</span>
+      <span class="n">${s.grades.length} vot${s.grades.length===1?'o':'i'}</span>
+      <span class="badge bg-${cls(a)}">${fmt(a)}</span>
+      <button class="icon" data-del="${s.id}" title="Elimina materia">✕</button>
+    </div>`;
+  }).join('');
+}
+function renderGrades(){
+  const s = getSubj(selected);
+  const form = $('gradeForm');
+  form.style.display = s ? '' : 'none';
+  form.nextElementSibling.style.display = s ? '' : 'none';
+  if(!s){ $('gradesTitle').textContent='Voti'; $('gradeTable').innerHTML='<div class="empty">Seleziona o crea una materia per inserire i voti.</div>'; return; }
+  const a = avg(s.grades);
+  $('gradesTitle').innerHTML = `Voti di ${esc(s.name)} <span class="badge bg-${cls(a)}" style="margin-left:6px">${fmt(a)}</span>`;
+  if(!s.grades.length){ $('gradeTable').innerHTML='<div class="empty">Nessun voto ancora.</div>'; return; }
+  const sorted = [...s.grades].sort((x,y)=> y.date.localeCompare(x.date));
+  $('gradeTable').innerHTML = `<table><thead><tr><th>Data</th><th>Voto</th><th>Peso</th><th>Nota</th><th></th></tr></thead><tbody>
+    ${sorted.map(g=>`<tr>
+      <td>${fmtDate(g.date)}</td>
+      <td><b class="${cls(g.value)}">${esc(g.label||fmt(g.value))}</b></td>
+      <td class="muted">${Math.round(g.weight*100)}%</td>
+      <td class="muted">${esc(g.note||'')}</td>
+      <td><button class="icon" data-delg="${g.id}" title="Elimina voto">✕</button></td>
+    </tr>`).join('')}</tbody></table>`;
+}
+function renderCalcSelect(){
+  const sel = $('cSubj'); const cur = sel.value || selected;
+  sel.innerHTML = state.subjects.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  if(cur && getSubj(cur)) sel.value = cur;
+}
+function renderCalc(){
+  const out = $('cResult');
+  const s = getSubj($('cSubj').value);
+  if(!s){ out.innerHTML = '<span class="muted">Aggiungi una materia per usare il calcolatore.</span>'; return; }
+  const T = parseFloat($('cTarget').value);
+  const w = parseFloat($('cWeight').value);
+  const n = parseInt($('cCount').value,10);
+  if(isNaN(T) || T<1 || T>10){ out.innerHTML = '<span class="muted">Inserisci una media tra 1 e 10.</span>'; return; }
+  let S=0, W=0; for(const g of s.grades){ S+=g.value*g.weight; W+=g.weight; }
+  const cur = W ? S/W : null;
+  // (S + x*w*n) / (W + w*n) = T  ->  x = (T*(W+w*n) - S) / (w*n)
+  const need = (T*(W + w*n) - S) / (w*n);
+  const plural = n>1 ? ` (in media, su ${n} verifiche)` : '';
+  let html = `<div class="muted" style="font-size:13px">Media attuale: <b>${fmt(cur)}</b> → obiettivo <b>${fmt(T)}</b></div>`;
+  if(need > 10){
+    const best = (S + 10*w*n)/(W + w*n);
+    html += `<div class="big b">${fmt(need)}</div><div>😬 Servirebbe più di 10${plural}: non raggiungibile così. Anche con tutti 10 arriveresti a <b>${fmt(best)}</b>. Prova ad aggiungere più verifiche.</div>`;
+  } else if(need <= 1){
+    html += `<div class="big g">✓</div><div>🎉 Sei già sopra l'obiettivo: anche con un 1${plural} resteresti a ≥ ${fmt(T)}.</div>`;
+  } else {
+    const r = Math.ceil(need*4)/4; // arrotondato al quarto di voto superiore
+    html += `<div class="big ${cls(need)}">${fmt(need)}</div><div>Ti serve almeno <b>${fmt(need)}</b>${plural}.${r<10 ? ` In pratica: <b>${labelOf(r)}</b> o più.` : ' Serve il massimo!'}</div>`;
+  }
+  out.innerHTML = html;
+}
+function labelOf(v){
+  const i = Math.floor(v), f = v - i;
+  if(f===0) return String(i);
+  if(f===0.25) return i+'+';
+  if(f===0.5) return i+'½';
+  if(f===0.75) return (i+1)+'-';
+  return fmt(v);
+}
+
+/* ---------- Chart ---------- */
+function series(s){
+  // media cumulativa nel tempo + punti voto
+  const g = [...s.grades].sort((a,b)=>a.date.localeCompare(b.date));
+  let S=0,W=0; return g.map(x => { S+=x.value*x.weight; W+=x.weight; return {date:x.date, value:x.value, avg:S/W, label:x.label, note:x.note}; });
+}
+function overallSeries(){
+  const dates = [...new Set(state.subjects.flatMap(s=>s.grades.map(g=>g.date)))].sort();
+  return dates.map(d => {
+    const avgs = state.subjects.map(s => avg(s.grades.filter(g=>g.date<=d))).filter(v=>v!=null);
+    return {date:d, avg: avgs.reduce((a,b)=>a+b,0)/avgs.length};
+  });
+}
+function renderChart(){
+  const tabs = $('chartTabs');
+  if(chartMode!=='all' && !getSubj(chartMode)) chartMode='all';
+  tabs.innerHTML = `<button class="${chartMode==='all'?'on':''}" data-mode="all">Tutte</button>` +
+    state.subjects.map(s=>`<button class="${chartMode===s.id?'on':''}" data-mode="${s.id}">${esc(s.name)}</button>`).join('');
+
+  const svg = $('chart'); const legend = $('legend');
+  const Wd=640, H=300, P={l:34,r:14,t:14,b:30};
+  const cs = getComputedStyle(document.documentElement);
+  const cLine = cs.getPropertyValue('--line').trim(), cMuted = cs.getPropertyValue('--muted').trim(),
+        cText = cs.getPropertyValue('--text').trim(), cBad = cs.getPropertyValue('--bad').trim(), cCard = cs.getPropertyValue('--card').trim();
+
+  const lines = []; // {name,color,pts:[{date,y,value?}],dots:boolean,width,dash}
+  if(chartMode==='all'){
+    for(const s of state.subjects){ if(s.grades.length) lines.push({name:s.name,color:colorOf(s),pts:series(s).map(p=>({date:p.date,y:p.avg,tip:`${s.name}: media ${fmt(p.avg)}`})),width:2,op:.55}); }
+    const o = overallSeries();
+    if(o.length) lines.push({name:'Media generale',color:cText,pts:o.map(p=>({date:p.date,y:p.avg,tip:`Media generale: ${fmt(p.avg)}`})),width:3.5,op:1});
+  } else {
+    const s = getSubj(chartMode); const sr = series(s);
+    if(sr.length){
+      lines.push({name:'Voti',color:colorOf(s),pts:sr.map(p=>({date:p.date,y:p.value,tip:`${fmtDate(p.date)} · voto ${p.label||fmt(p.value)}${p.note?' · '+p.note:''}`})),width:0,op:1,dotsOnly:true});
+      lines.push({name:'Media',color:colorOf(s),pts:sr.map(p=>({date:p.date,y:p.avg,tip:`${fmtDate(p.date)} · media ${fmt(p.avg)}`})),width:3,op:1});
+    }
+  }
+  const allPts = lines.flatMap(l=>l.pts);
+  if(!allPts.length){
+    svg.innerHTML = `<text x="${Wd/2}" y="${H/2}" text-anchor="middle" fill="${cMuted}" font-size="14">Inserisci qualche voto per vedere il grafico</text>`;
+    legend.innerHTML=''; return;
+  }
+  const times = allPts.map(p=>+new Date(p.date+'T00:00'));
+  let t0 = Math.min(...times), t1 = Math.max(...times);
+  if(t0===t1){ t0 -= 86400000*3; t1 += 86400000*3; }
+  const ys = allPts.map(p=>p.y);
+  let y0 = Math.max(1, Math.floor(Math.min(...ys, 6) - .5)), y1 = Math.min(10, Math.ceil(Math.max(...ys) + .5));
+  if(y1-y0<2) y1 = Math.min(10,y0+2);
+  const X = t => P.l + (t-t0)/(t1-t0)*(Wd-P.l-P.r);
+  const Y = v => P.t + (y1-v)/(y1-y0)*(H-P.t-P.b);
+
+  let g = '';
+  for(let v=y0; v<=y1; v++){
+    g += `<line x1="${P.l}" x2="${Wd-P.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v===6?cBad:cLine}" stroke-width="1" ${v===6?'stroke-dasharray="4 4" opacity=".7"':''}/>`;
+    g += `<text x="${P.l-8}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="${cMuted}">${v}</text>`;
+  }
+  // x ticks
+  const nT = Math.min(6, new Set(times).size || 2);
+  for(let i=0;i<nT;i++){
+    const t = t0 + (t1-t0)*i/(Math.max(1,nT-1));
+    const d = new Date(t);
+    const anc = nT>1 && i===0 ? 'start' : nT>1 && i===nT-1 ? 'end' : 'middle';
+    g += `<text x="${X(t)}" y="${H-8}" text-anchor="${anc}" font-size="11" fill="${cMuted}">${d.toLocaleDateString('it-IT',{day:'2-digit',month:'short'})}</text>`;
+  }
+  const hits = [];
+  for(const l of lines){
+    const pts = l.pts.map(p=>[X(+new Date(p.date+'T00:00')), Y(p.y), p]);
+    if(!l.dotsOnly && pts.length>1){
+      g += `<polyline fill="none" stroke="${l.color}" stroke-width="${l.width}" stroke-linejoin="round" stroke-linecap="round" opacity="${l.op}" points="${pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}"/>`;
+    }
+    for(const [x,y,p] of pts){
+      const r = l.dotsOnly ? 5 : (l.width>3?4:3);
+      g += `<circle cx="${x}" cy="${y}" r="${r}" fill="${l.dotsOnly?cCard:l.color}" stroke="${l.color}" stroke-width="${l.dotsOnly?2.5:0}" opacity="${l.op}"/>`;
+      hits.push({x,y,tip:p.tip});
+    }
+  }
+  svg.innerHTML = g;
+  svg._hits = hits;
+  legend.innerHTML = lines.map(l=>`<span><span class="dot" style="background:${l.dotsOnly?'transparent':l.color};border:2px solid ${l.color}"></span>${esc(l.name)}</span>`).join('') +
+    `<span class="muted"><span style="display:inline-block;width:16px;border-top:2px dashed ${cBad}"></span>soglia 6</span>`;
+}
+$('chart').addEventListener('mousemove', e => {
+  const svg = e.currentTarget, hits = svg._hits||[], tip = $('tip');
+  const r = svg.getBoundingClientRect(), sx = 640/r.width;
+  const mx = (e.clientX-r.left)*sx, my = (e.clientY-r.top)*sx;
+  let best=null, bd=Infinity;
+  for(const h of hits){ const d=Math.hypot(h.x-mx,h.y-my); if(d<bd){bd=d;best=h;} }
+  if(best && bd<24){ tip.style.display='block'; tip.textContent=best.tip; tip.style.left=(best.x/sx)+'px'; tip.style.top=(best.y/sx)+'px'; }
+  else tip.style.display='none';
+});
+$('chart').addEventListener('mouseleave', ()=> $('tip').style.display='none');
+
+/* ---------- Events ---------- */
+$('subjForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('subjName').value.trim(); if(!name) return;
+  if(state.subjects.some(s=>s.name.toLowerCase()===name.toLowerCase())){ alert('Materia già presente'); return; }
+  const s = {id:uid(), name, grades:[]};
+  state.subjects.push(s); selected = s.id; $('cSubj').value = s.id;
+  $('subjName').value=''; save(); render(); $('cSubj').value = s.id; renderCalc();
+});
+$('subjList').addEventListener('click', e => {
+  const del = e.target.closest('[data-del]');
+  if(del){
+    const s = getSubj(del.dataset.del);
+    if(confirm(`Eliminare "${s.name}" e tutti i suoi voti?`)){
+      state.subjects = state.subjects.filter(x=>x!==s);
+      if(selected===s.id) selected = state.subjects[0]?.id||null;
+      save(); render();
+    }
+    return;
+  }
+  const row = e.target.closest('.subj');
+  if(row){ selected=row.dataset.id; $('cSubj').value=selected; render(); }
+});
+$('gradeForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const s = getSubj(selected); if(!s) return;
+  const raw = $('gVal').value; const v = parseGrade(raw);
+  if(v==null || v<0 || v>10){ alert('Voto non valido. Usa un numero da 0 a 10 (es. 7, 7.5, 7+, 6/7).'); return; }
+  const label = /^\d+(\.\d+)?$/.test(raw.trim().replace(',','.')) ? null : raw.trim();
+  s.grades.push({id:uid(), value:v, label, date:$('gDate').value, weight:parseFloat($('gWeight').value), note:$('gNote').value.trim()});
+  $('gVal').value=''; $('gNote').value=''; $('gVal').focus();
+  save(); render();
+});
+$('gradeTable').addEventListener('click', e => {
+  const b = e.target.closest('[data-delg]'); if(!b) return;
+  const s = getSubj(selected); s.grades = s.grades.filter(g=>g.id!==b.dataset.delg); save(); render();
+});
+$('chartTabs').addEventListener('click', e => { const b=e.target.closest('[data-mode]'); if(b){ chartMode=b.dataset.mode; renderChart(); } });
+['cSubj','cTarget','cWeight','cCount'].forEach(id => $(id).addEventListener('input', renderCalc));
+
+$('exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'voti-backup-'+new Date().toISOString().slice(0,10)+'.json'; a.click(); URL.revokeObjectURL(a.href);
+});
+$('importBtn').addEventListener('click', ()=> $('importFile').click());
+$('importFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; if(!f) return;
+  try{
+    const data = JSON.parse(await f.text());
+    if(!Array.isArray(data.subjects)) throw 0;
+    if(!confirm('Sostituire i dati attuali con quelli del file?')) return;
+    state = data; selected = state.subjects[0]?.id||null; save(); render();
+  }catch(err){ alert('File non valido'); }
+  e.target.value='';
+});
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', renderChart);
+
+$('gDate').value = new Date().toISOString().slice(0,10);
+render();
+})();
+</script>
+</body>
+</html>
