@@ -9,6 +9,12 @@ App (PWA) per inserire i voti di ogni materia, vedere la media aggiornata, il gr
 - `sw.js` – service worker: rende l'app disponibile offline
 - `icons/` – icone (SVG sorgente + PNG 192/512, maskable, Apple)
 
+## Versione in un unico file
+
+`media-voti.html` contiene tutta l'app in un solo file (icona compresa), senza bisogno di hosting:
+basta aprirlo con un browser. I dati restano salvati in quel browser.
+Non è installabile come app e non ha il service worker: per quello serve la versione PWA qui sotto.
+
 ## Installarla sul telefono
 
 Per essere installabile la PWA deve essere servita via **HTTPS** (aprire il file direttamente non basta).
